@@ -17,12 +17,46 @@
         app:layout_constraintTop_toTopOf="parent" />
 
 
-    <Button
-        android:id="@+id/btn_start"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="start"
-        app:layout_constraintTop_toBottomOf="@id/sv_frame" />
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        app:layout_constraintTop_toBottomOf="@id/sv_frame">
 
+        <Button
+            android:id="@+id/btn_start"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="start"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/btn_decode_stream"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="decode by stream"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/btn_decode_resource"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="decode by resource"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/btn_rapid_decode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="rapid decode"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/btn_decode_asset"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="decode assets"
+            android:textAllCaps="false" />
+    </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>

@@ -18,7 +18,9 @@ allprojects {
     repositories {
         google()
         jcenter()
-        
+        maven {
+            url 'https://github.com/suckgamony/RapidDecoder/raw/master/repository'
+        }
     }
 }
 

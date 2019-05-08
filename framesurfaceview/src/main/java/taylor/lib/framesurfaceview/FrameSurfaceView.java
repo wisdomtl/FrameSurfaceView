@@ -1,7 +1,6 @@
 package taylor.lib.framesurfaceview;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -9,9 +8,11 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.util.AttributeSet;
-import android.util.Log;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,44 +20,49 @@ import java.util.List;
  * a SurfaceView which draws bitmaps one after another like frame animation
  */
 public class FrameSurfaceView extends BaseSurfaceView {
-    public static final int INVALID_BITMAP_INDEX = Integer.MAX_VALUE;
+    public static final int INVALID_INDEX = Integer.MAX_VALUE;
+    private int bufferSize = 3;
 
-    private List<Integer> bitmaps = new ArrayList<>();
-    private Bitmap frameBitmap;
-    private int bitmapIndex = INVALID_BITMAP_INDEX;
-    private Paint paint = new Paint();
+    /**
+     * the resources of frame animation
+     */
+    private List<Integer> bitmapIds = new ArrayList<>();
+    /**
+     * the index of bitmap resource which is decoding
+     */
+    private int bitmapIdIndex;
+    /**
+     * the index of frame which is drawing
+     */
+    private int frameIndex = INVALID_INDEX;
+    /**
+     * decoded bitmaps stores in this queue
+     * consumer is drawing thread, producer is decoding thread.
+     */
+    private LinkedBlockingQueue decodedBitmaps = new LinkedBlockingQueue(bufferSize);
+    /**
+     * bitmaps already drawn by canvas stores in this queue
+     * consumer is decoding thread, producer is drawing thread.
+     */
+    private LinkedBlockingQueue drawnBitmaps = new LinkedBlockingQueue(bufferSize);
+    /**
+     * the thread for decoding bitmaps
+     */
+    private HandlerThread decodeThread;
+    /**
+     * the Runnable describes how to decode one bitmap
+     */
+    private DecodeRunnable decodeRunnable;
+    /**
+     * this handler helps to decode bitmap one after another
+     */
+    private Handler handler;
     private BitmapFactory.Options options;
+    private Paint paint = new Paint();
     private Rect srcRect;
     private Rect dstRect = new Rect();
     private int defaultWidth;
     private int defaultHeight;
-
-    public void setDuration(int duration) {
-        int frameDuration = duration / bitmaps.size();
-        setFrameDuration(frameDuration);
-    }
-
-    public void setBitmaps(List<Integer> bitmaps) {
-        if (bitmaps == null || bitmaps.size() == 0) {
-            return;
-        }
-        this.bitmaps = bitmaps;
-        //by default, take the first bitmap's dimension into consideration
-        getBitmapDimension(bitmaps.get(0));
-    }
-
-    private void getBitmapDimension(Integer integer) {
-        final BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        BitmapFactory.decodeResource(this.getResources(), integer, options);
-        defaultWidth = options.outWidth;
-        defaultHeight = options.outHeight;
-        srcRect = new Rect(0, 0, defaultWidth, defaultHeight);
-        Log.v("ttaylor", "FrameSurfaceView.getBitmapDimension()" + "  defaultWidth=" + defaultWidth + " defaultHeight=" + defaultHeight);
-        //we have to re-measure to make defaultWidth in use in onMeasure()
-        requestLayout();
-
-    }
 
     public FrameSurfaceView(Context context) {
         super(context);
@@ -75,6 +81,7 @@ public class FrameSurfaceView extends BaseSurfaceView {
         super.init();
         options = new BitmapFactory.Options();
         options.inMutable = true;
+        decodeThread = new HandlerThread("bitmap decoding thread");
     }
 
     @Override
@@ -95,17 +102,61 @@ public class FrameSurfaceView extends BaseSurfaceView {
 
     @Override
     protected void onFrameDrawFinish() {
-//        recycle();
+    }
+
+    /**
+     * set the duration of frame animation
+     * @param duration time in milliseconds
+     */
+    public void setDuration(int duration) {
+        int frameDuration = duration / bitmapIds.size();
+        setFrameDuration(frameDuration);
+    }
+
+    /**
+     * set the materials of frame animation which is an array of bitmap resource id
+     * @param bitmapIds an array of bitmap resource id
+     */
+    public void setBitmapIds(List<Integer> bitmapIds) {
+        if (bitmapIds == null || bitmapIds.size() == 0) {
+            return;
+        }
+        this.bitmapIds = bitmapIds;
+        //by default, take the first bitmap's dimension into consideration
+        getBitmapDimension(bitmapIds.get(bitmapIdIndex));
+        preloadFrames();
+        decodeRunnable = new DecodeRunnable(bitmapIdIndex, bitmapIds, options);
+    }
+
+    private void getBitmapDimension(int bitmapId) {
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeResource(this.getResources(), bitmapId, options);
+        defaultWidth = options.outWidth;
+        defaultHeight = options.outHeight;
+        srcRect = new Rect(0, 0, defaultWidth, defaultHeight);
+        //we have to re-measure to make defaultWidth in use in onMeasure()
+        requestLayout();
+    }
+
+    /**
+     * load the first several frames of animation before it is started
+     */
+    private void preloadFrames() {
+        putDecodedBitmap(bitmapIds.get(bitmapIdIndex++), options, new LinkedBitmap());
+        putDecodedBitmap(bitmapIds.get(bitmapIdIndex++), options, new LinkedBitmap());
     }
 
     /**
      * recycle the bitmap used by frame animation.
      * Usually it should be invoked when the ui of frame animation is no longer visible
      */
-    public void recycle() {
-        if (frameBitmap != null) {
-            frameBitmap.recycle();
-            frameBitmap = null;
+    public void destroy() {
+        if (drawnBitmaps != null) {
+            drawnBitmaps.clear();
+        }
+        if (decodeThread != null) {
+            decodeThread.quit();
         }
     }
 
@@ -128,11 +179,12 @@ public class FrameSurfaceView extends BaseSurfaceView {
      * @param canvas
      */
     private void drawOneFrame(Canvas canvas) {
-        Log.v("ttaylor", "ProgressRingSurfaceView.onFrameDraw()" + "  bitmapIndex=" + bitmapIndex + " measureWidth=" + getMeasuredWidth());
-        frameBitmap = decodeOriginBitmap(getResources(), bitmaps.get(bitmapIndex), options);
-        options.inBitmap = frameBitmap;
-        canvas.drawBitmap(frameBitmap, srcRect, dstRect, paint);
-        bitmapIndex++;
+        LinkedBitmap linkedBitmap = getDecodedBitmap();
+        if (linkedBitmap != null) {
+            canvas.drawBitmap(linkedBitmap.bitmap, srcRect, dstRect, paint);
+        }
+        putDrawnBitmap(linkedBitmap);
+        frameIndex++;
     }
 
     /**
@@ -143,10 +195,10 @@ public class FrameSurfaceView extends BaseSurfaceView {
     }
 
     /**
-     * reset the index of bitmap, preparing for the next frame animation
+     * reset the index of frame, preparing for the next frame animation
      */
     private void reset() {
-        bitmapIndex = INVALID_BITMAP_INDEX;
+        frameIndex = INVALID_INDEX;
     }
 
     /**
@@ -155,7 +207,7 @@ public class FrameSurfaceView extends BaseSurfaceView {
      * @return true: animation is finished, false: animation is doing
      */
     private boolean isFinish() {
-        return bitmapIndex >= bitmaps.size();
+        return frameIndex >= bitmapIds.size();
     }
 
     /**
@@ -164,14 +216,21 @@ public class FrameSurfaceView extends BaseSurfaceView {
      * @return true: animation is started, false: animation is not started
      */
     private boolean isStart() {
-        return bitmapIndex != INVALID_BITMAP_INDEX;
+        return frameIndex != INVALID_INDEX;
     }
 
     /**
-     * start frame animation which means draw list of bitmaps from 0 index
+     * start frame animation from the first frame
      */
     public void start() {
-        bitmapIndex = 0;
+        frameIndex = 0;
+        if (!decodeThread.isAlive()) {
+            decodeThread.start();
+        }
+        if (handler == null) {
+            handler = new Handler(decodeThread.getLooper());
+        }
+        handler.post(decodeRunnable);
     }
 
 
@@ -185,10 +244,90 @@ public class FrameSurfaceView extends BaseSurfaceView {
         paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC));
     }
 
-
-    private Bitmap decodeOriginBitmap(Resources res, int resId, BitmapFactory.Options options) {
+    /**
+     * decode bitmap by BitmapFactory.decodeStream(), it is about twice faster than BitmapFactory.decodeResource()
+     * @param resId the bitmap resource
+     * @param options
+     * @return
+     */
+    private Bitmap decodeBitmap(int resId, BitmapFactory.Options options) {
         options.inScaled = false;
-        Bitmap bitmap = BitmapFactory.decodeResource(res, resId, options);
+        InputStream inputStream = getResources().openRawResource(resId);
+        return BitmapFactory.decodeStream(inputStream, null, options);
+    }
+
+    private void putDecodedBitmapByReuse(int resId, BitmapFactory.Options options) {
+        LinkedBitmap linkedBitmap = getDrawnBitmap();
+        if (linkedBitmap == null) {
+            linkedBitmap = new LinkedBitmap();
+        }
+        options.inBitmap = linkedBitmap.bitmap;
+        putDecodedBitmap(resId, options, linkedBitmap);
+    }
+
+    private void putDecodedBitmap(int resId, BitmapFactory.Options options, LinkedBitmap linkedBitmap) {
+        Bitmap bitmap = decodeBitmap(resId, options);
+        linkedBitmap.bitmap = bitmap;
+        try {
+            decodedBitmaps.put(linkedBitmap);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void putDrawnBitmap(LinkedBitmap bitmap) {
+        drawnBitmaps.offer(bitmap);
+    }
+
+    /**
+     * get
+     * @return
+     */
+    private LinkedBitmap getDrawnBitmap() {
+        LinkedBitmap bitmap = null;
+        try {
+            bitmap = drawnBitmaps.take();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         return bitmap;
+    }
+
+    /**
+     * get decoded bitmap in the live bitmap queue
+     * @return
+     */
+    private LinkedBitmap getDecodedBitmap() {
+        LinkedBitmap bitmap = null;
+        try {
+            bitmap = decodedBitmaps.take();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return bitmap;
+    }
+
+    private class DecodeRunnable implements Runnable {
+
+        private int index;
+        private List<Integer> bitmapIds;
+        private BitmapFactory.Options options;
+
+        public DecodeRunnable(int index, List<Integer> bitmapIds, BitmapFactory.Options options) {
+            this.index = index;
+            this.bitmapIds = bitmapIds;
+            this.options = options;
+        }
+
+        @Override
+        public void run() {
+            putDecodedBitmapByReuse(bitmapIds.get(index), options);
+            index++;
+            if (index < bitmapIds.size()) {
+                handler.post(this);
+            } else {
+                index = 0;
+            }
+        }
     }
 }

@@ -117,27 +117,8 @@ public class MainActivity extends AppCompatActivity  {
 
 
         frameSurfaceView = findViewById(R.id.sv_frame);
-        frameSurfaceView.setBitmaps(bitmaps);
+        frameSurfaceView.setBitmapIds(bitmaps);
         frameSurfaceView.setDuration(600);
 
     }
-
-//    public synchronized byte[] drawableToByte(Drawable drawable) {
-//
-//        if (drawable != null) {
-//            Bitmap bitmap = Bitmap.createBitmap(
-//                    drawable.getIntrinsicWidth(),
-//                    drawable.getIntrinsicHeight(),
-//                    Bitmap.Config.ARGB_8888);
-//            Canvas canvas = new Canvas(bitmap);
-//            drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
-//            drawable.draw(canvas);
-//            int size = bitmap.getWidth() * bitmap.getHeight() * 4;
-//            ByteArrayOutputStream baos = new ByteArrayOutputStream(size);
-//            bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-//            byte[] imagedata = baos.toByteArray();
-//            return imagedata;
-//        }
-//        return null;
-//    }
 }

@@ -16,11 +16,12 @@ import taylor.lib.framesurfaceview.NumberUtil;
 import taylor.lib.framesurfaceview.FrameSurfaceView;
 import taylor.lib.framesurfaceview.MethodUtil;
 
-public class MainActivity extends AppCompatActivity  {
+public class MainActivity extends AppCompatActivity {
 
     private FrameSurfaceView frameSurfaceView;
 
-    private List<Integer> bitmaps = Arrays.asList(R.drawable.watch_reward_1,
+    private List<Integer> normalBitmaps = Arrays.asList(
+            R.drawable.watch_reward_1,
             R.drawable.watch_reward_2,
             R.drawable.watch_reward_3,
             R.drawable.watch_reward_4,
@@ -41,7 +42,30 @@ public class MainActivity extends AppCompatActivity  {
             R.drawable.watch_reward_19,
             R.drawable.watch_reward_20,
             R.drawable.watch_reward_21,
-            R.drawable.watch_reward_22);
+            R.drawable.watch_reward_22
+    );
+    private List<Integer> hugeBitmaps = Arrays.asList(
+            R.raw.frame0,
+            R.raw.frame1,
+            R.raw.frame2,
+            R.raw.frame3,
+            R.raw.frame4,
+            R.raw.frame5,
+            R.raw.frame6,
+            R.raw.frame7,
+            R.raw.frame8,
+            R.raw.frame9,
+            R.raw.frame10,
+            R.raw.frame11,
+            R.raw.frame12,
+            R.raw.frame13,
+            R.raw.frame14,
+            R.raw.frame15,
+            R.raw.frame16,
+            R.raw.frame17,
+            R.raw.frame18,
+            R.raw.frame19
+    );
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -117,7 +141,7 @@ public class MainActivity extends AppCompatActivity  {
 
 
         frameSurfaceView = findViewById(R.id.sv_frame);
-        frameSurfaceView.setBitmaps(bitmaps);
+        frameSurfaceView.setBitmaps(hugeBitmaps);
         frameSurfaceView.setDuration(600);
 
     }

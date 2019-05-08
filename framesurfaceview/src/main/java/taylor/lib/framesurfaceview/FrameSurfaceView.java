@@ -22,6 +22,7 @@ import java.util.List;
 public class FrameSurfaceView extends BaseSurfaceView {
     public static final int INVALID_INDEX = Integer.MAX_VALUE;
     private int bufferSize = 3;
+    public static final String DECODE_THREAD_NAME = "DecodingThread";
 
     /**
      * the resources of frame animation
@@ -81,7 +82,7 @@ public class FrameSurfaceView extends BaseSurfaceView {
         super.init();
         options = new BitmapFactory.Options();
         options.inMutable = true;
-        decodeThread = new HandlerThread("bitmap decoding thread");
+        decodeThread = new HandlerThread(DECODE_THREAD_NAME);
     }
 
     @Override
@@ -106,6 +107,7 @@ public class FrameSurfaceView extends BaseSurfaceView {
 
     /**
      * set the duration of frame animation
+     *
      * @param duration time in milliseconds
      */
     public void setDuration(int duration) {
@@ -115,6 +117,7 @@ public class FrameSurfaceView extends BaseSurfaceView {
 
     /**
      * set the materials of frame animation which is an array of bitmap resource id
+     *
      * @param bitmapIds an array of bitmap resource id
      */
     public void setBitmapIds(List<Integer> bitmapIds) {
@@ -157,6 +160,10 @@ public class FrameSurfaceView extends BaseSurfaceView {
         }
         if (decodeThread != null) {
             decodeThread.quit();
+            decodeThread = null;
+        }
+        if (handler != null) {
+            handler = null;
         }
     }
 
@@ -207,7 +214,7 @@ public class FrameSurfaceView extends BaseSurfaceView {
      * @return true: animation is finished, false: animation is doing
      */
     private boolean isFinish() {
-        return frameIndex >= bitmapIds.size();
+        return frameIndex >= bitmapIds.size() - 1;
     }
 
     /**
@@ -224,6 +231,9 @@ public class FrameSurfaceView extends BaseSurfaceView {
      */
     public void start() {
         frameIndex = 0;
+        if (decodeThread == null) {
+            decodeThread = new HandlerThread(DECODE_THREAD_NAME);
+        }
         if (!decodeThread.isAlive()) {
             decodeThread.start();
         }
@@ -246,7 +256,8 @@ public class FrameSurfaceView extends BaseSurfaceView {
 
     /**
      * decode bitmap by BitmapFactory.decodeStream(), it is about twice faster than BitmapFactory.decodeResource()
-     * @param resId the bitmap resource
+     *
+     * @param resId   the bitmap resource
      * @param options
      * @return
      */
@@ -280,7 +291,8 @@ public class FrameSurfaceView extends BaseSurfaceView {
     }
 
     /**
-     * get
+     * get bitmap which already drawn by canvas
+     *
      * @return
      */
     private LinkedBitmap getDrawnBitmap() {
@@ -294,7 +306,8 @@ public class FrameSurfaceView extends BaseSurfaceView {
     }
 
     /**
-     * get decoded bitmap in the live bitmap queue
+     * get decoded bitmap in the decoded bitmap queue
+     *
      * @return
      */
     private LinkedBitmap getDecodedBitmap() {

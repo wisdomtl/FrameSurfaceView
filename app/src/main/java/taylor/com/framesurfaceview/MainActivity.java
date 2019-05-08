@@ -121,4 +121,10 @@ public class MainActivity extends AppCompatActivity {
         frameSurfaceView.setDuration(600);
 
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        frameSurfaceView.destroy();
+    }
 }

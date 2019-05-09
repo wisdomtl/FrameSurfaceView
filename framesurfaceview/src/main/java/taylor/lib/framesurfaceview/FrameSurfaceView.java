@@ -240,6 +240,9 @@ public class FrameSurfaceView extends BaseSurfaceView {
         if (handler == null) {
             handler = new Handler(decodeThread.getLooper());
         }
+        if(decodeRunnable!=null){
+            decodeRunnable.setIndex(0);
+        }
         handler.post(decodeRunnable);
     }
 
@@ -330,6 +333,10 @@ public class FrameSurfaceView extends BaseSurfaceView {
             this.index = index;
             this.bitmapIds = bitmapIds;
             this.options = options;
+        }
+
+        public void setIndex(int index){
+            this.index = index ;
         }
 
         @Override

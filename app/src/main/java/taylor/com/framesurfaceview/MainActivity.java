@@ -16,7 +16,7 @@ import taylor.lib.framesurfaceview.NumberUtil;
 import taylor.lib.framesurfaceview.FrameSurfaceView;
 import taylor.lib.framesurfaceview.MethodUtil;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity  {
 
     private FrameSurfaceView frameSurfaceView;
 
@@ -141,27 +141,14 @@ public class MainActivity extends AppCompatActivity {
 
 
         frameSurfaceView = findViewById(R.id.sv_frame);
-        frameSurfaceView.setBitmaps(hugeBitmaps);
+        frameSurfaceView.setBitmapIds(hugeBitmaps);
         frameSurfaceView.setDuration(600);
 
     }
 
-//    public synchronized byte[] drawableToByte(Drawable drawable) {
-//
-//        if (drawable != null) {
-//            Bitmap bitmap = Bitmap.createBitmap(
-//                    drawable.getIntrinsicWidth(),
-//                    drawable.getIntrinsicHeight(),
-//                    Bitmap.Config.ARGB_8888);
-//            Canvas canvas = new Canvas(bitmap);
-//            drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
-//            drawable.draw(canvas);
-//            int size = bitmap.getWidth() * bitmap.getHeight() * 4;
-//            ByteArrayOutputStream baos = new ByteArrayOutputStream(size);
-//            bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-//            byte[] imagedata = baos.toByteArray();
-//            return imagedata;
-//        }
-//        return null;
-//    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        frameSurfaceView.destroy();
+    }
 }

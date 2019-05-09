@@ -17,7 +17,7 @@ public abstract class BaseSurfaceView extends SurfaceView implements SurfaceHold
 
     private HandlerThread handlerThread;
     private SurfaceViewHandler handler;
-    private int frameDuration = DEFAULT_FRAME_DURATION_MILLISECOND;
+    protected int frameDuration = DEFAULT_FRAME_DURATION_MILLISECOND;
     private Canvas canvas;
     private boolean isAlive;
 
@@ -36,7 +36,11 @@ public abstract class BaseSurfaceView extends SurfaceView implements SurfaceHold
         init();
     }
 
-    public void setFrameDuration(int frameDuration) {
+    protected int getFrameDuration() {
+        return frameDuration;
+    }
+
+    protected void setFrameDuration(int frameDuration) {
         this.frameDuration = frameDuration;
     }
 
@@ -138,6 +142,7 @@ public abstract class BaseSurfaceView extends SurfaceView implements SurfaceHold
                 onFrameDrawFinish();
             }
 
+            // TODO: 2019-05-08 stop the drawing thread
             handler.postDelayed(this, frameDuration);
         }
     }

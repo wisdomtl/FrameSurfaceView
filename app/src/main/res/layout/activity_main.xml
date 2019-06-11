@@ -27,35 +27,35 @@
             android:id="@+id/btn_start"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="start"
+            android:text="start frame animtion"
             android:textAllCaps="false" />
 
         <Button
             android:id="@+id/btn_decode_stream"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="decode by stream"
+            android:text="decode bitmap by stream"
             android:textAllCaps="false" />
 
         <Button
             android:id="@+id/btn_decode_resource"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="decode by resource"
+            android:text="decode bitmap by resource"
             android:textAllCaps="false" />
 
         <Button
             android:id="@+id/btn_rapid_decode"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="rapid decode"
+            android:text="decode bitmap by rapid decode"
             android:textAllCaps="false" />
 
         <Button
             android:id="@+id/btn_decode_asset"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="decode assets"
+            android:text="decode bitmap from assets"
             android:textAllCaps="false" />
     </LinearLayout>
 

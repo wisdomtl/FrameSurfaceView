@@ -1,10 +1,12 @@
 package taylor.com.framesurfaceview;
 
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.ImageView;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,6 +21,7 @@ import taylor.lib.framesurfaceview.MethodUtil;
 public class MainActivity extends AppCompatActivity  {
 
     private FrameSurfaceView frameSurfaceView;
+    public static final int FRAM_ANIMATION_DURATION = 600;
 
     private List<Integer> normalBitmaps = Arrays.asList(
             R.drawable.watch_reward_1,
@@ -131,19 +134,56 @@ public class MainActivity extends AppCompatActivity  {
                 NumberUtil.average("assets decode", span);
             }
         });
+        findViewById(R.id.btn_start_2).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+               startAnimationByAnimationDrawable();
+            }
+        });
 
         findViewById(R.id.btn_start).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //play frame animation by FrameSurfaceView which is much more memory-efficient than AnimationDrawable
                 frameSurfaceView.start();
             }
         });
 
-
         frameSurfaceView = findViewById(R.id.sv_frame);
         frameSurfaceView.setBitmapIds(hugeBitmaps);
-        frameSurfaceView.setDuration(600);
+        frameSurfaceView.setDuration(FRAM_ANIMATION_DURATION);
 
+    }
+
+    /**
+     * play frame animation by AnimationDrawable which will cause a disaster to memory if bitmap is huge(around 1MB)
+     */
+    private void startAnimationByAnimationDrawable() {
+        AnimationDrawable drawable = new AnimationDrawable();
+        drawable.addFrame(getResources().getDrawable(R.drawable.frame1), FRAM_ANIMATION_DURATION/hugeBitmaps.size());
+        drawable.addFrame(getResources().getDrawable(R.drawable.frame2), FRAM_ANIMATION_DURATION/hugeBitmaps.size());
+        drawable.addFrame(getResources().getDrawable(R.drawable.frame3), FRAM_ANIMATION_DURATION/hugeBitmaps.size());
+        drawable.addFrame(getResources().getDrawable(R.drawable.frame4), FRAM_ANIMATION_DURATION/hugeBitmaps.size());
+        drawable.addFrame(getResources().getDrawable(R.drawable.frame5), FRAM_ANIMATION_DURATION/hugeBitmaps.size());
+        drawable.addFrame(getResources().getDrawable(R.drawable.frame6), FRAM_ANIMATION_DURATION/hugeBitmaps.size());
+        drawable.addFrame(getResources().getDrawable(R.drawable.frame7), FRAM_ANIMATION_DURATION/hugeBitmaps.size());
+        drawable.addFrame(getResources().getDrawable(R.drawable.frame8), FRAM_ANIMATION_DURATION/hugeBitmaps.size());
+        drawable.addFrame(getResources().getDrawable(R.drawable.frame9), FRAM_ANIMATION_DURATION/hugeBitmaps.size());
+        drawable.addFrame(getResources().getDrawable(R.drawable.frame10), FRAM_ANIMATION_DURATION/hugeBitmaps.size());
+        drawable.addFrame(getResources().getDrawable(R.drawable.frame11), FRAM_ANIMATION_DURATION/hugeBitmaps.size());
+        drawable.addFrame(getResources().getDrawable(R.drawable.frame12), FRAM_ANIMATION_DURATION/hugeBitmaps.size());
+        drawable.addFrame(getResources().getDrawable(R.drawable.frame13), FRAM_ANIMATION_DURATION/hugeBitmaps.size());
+        drawable.addFrame(getResources().getDrawable(R.drawable.frame14), FRAM_ANIMATION_DURATION/hugeBitmaps.size());
+        drawable.addFrame(getResources().getDrawable(R.drawable.frame15), FRAM_ANIMATION_DURATION/hugeBitmaps.size());
+        drawable.addFrame(getResources().getDrawable(R.drawable.frame16), FRAM_ANIMATION_DURATION/hugeBitmaps.size());
+        drawable.addFrame(getResources().getDrawable(R.drawable.frame17), FRAM_ANIMATION_DURATION/hugeBitmaps.size());
+        drawable.addFrame(getResources().getDrawable(R.drawable.frame18), FRAM_ANIMATION_DURATION/hugeBitmaps.size());
+        drawable.addFrame(getResources().getDrawable(R.drawable.frame19), FRAM_ANIMATION_DURATION/hugeBitmaps.size());
+        drawable.setOneShot(true);
+
+        ImageView ivFrameAnim = ((ImageView) findViewById(R.id.ivFrameAnimation));
+        ivFrameAnim.setImageDrawable(drawable);
+        drawable.start();
     }
 
     @Override

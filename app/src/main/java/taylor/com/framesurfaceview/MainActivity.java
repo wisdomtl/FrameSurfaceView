@@ -145,6 +145,7 @@ public class MainActivity extends AppCompatActivity  {
             @Override
             public void onClick(View v) {
                 //play frame animation by FrameSurfaceView which is much more memory-efficient than AnimationDrawable
+                frameSurfaceView.setRepeatTimes(FrameSurfaceView.INFINITE);
                 frameSurfaceView.start();
             }
         });

@@ -23,6 +23,10 @@ public class FrameSurfaceView extends BaseSurfaceView {
     public static final int INVALID_INDEX = Integer.MAX_VALUE;
     private int bufferSize = 3;
     public static final String DECODE_THREAD_NAME = "DecodingThread";
+    public static final int INFINITE = -1;
+    //-1 means repeat infinitely
+    private int repeatTimes;
+    private int repeatedCount;
 
     /**
      * the resources of frame animation
@@ -75,6 +79,10 @@ public class FrameSurfaceView extends BaseSurfaceView {
 
     public FrameSurfaceView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+    }
+
+    public void setRepeatTimes(int repeatTimes) {
+        this.repeatTimes = repeatTimes;
     }
 
     @Override
@@ -177,6 +185,14 @@ public class FrameSurfaceView extends BaseSurfaceView {
             drawOneFrame(canvas);
         } else {
             onFrameAnimationEnd();
+            if (repeatTimes != 0 && repeatTimes == INFINITE) {
+                start();
+            } else if (repeatedCount < repeatTimes) {
+                start();
+                repeatedCount++;
+            } else {
+                repeatedCount = 0;
+            }
         }
     }
 
@@ -240,7 +256,7 @@ public class FrameSurfaceView extends BaseSurfaceView {
         if (handler == null) {
             handler = new Handler(decodeThread.getLooper());
         }
-        if(decodeRunnable!=null){
+        if (decodeRunnable != null) {
             decodeRunnable.setIndex(0);
         }
         handler.post(decodeRunnable);
@@ -310,6 +326,7 @@ public class FrameSurfaceView extends BaseSurfaceView {
 
     /**
      * get decoded bitmap in the decoded bitmap queue
+     * it might block due to new bitmap is not ready
      *
      * @return
      */
@@ -335,8 +352,8 @@ public class FrameSurfaceView extends BaseSurfaceView {
             this.options = options;
         }
 
-        public void setIndex(int index){
-            this.index = index ;
+        public void setIndex(int index) {
+            this.index = index;
         }
 
         @Override

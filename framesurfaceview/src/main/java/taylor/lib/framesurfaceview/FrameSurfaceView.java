@@ -154,8 +154,8 @@ public class FrameSurfaceView extends BaseSurfaceView {
      * load the first several frames of animation before it is started
      */
     private void preloadFrames() {
-        putDecodedBitmap(bitmapIds.get(bitmapIdIndex++), options, new LinkedBitmap());
-        putDecodedBitmap(bitmapIds.get(bitmapIdIndex++), options, new LinkedBitmap());
+        decodeAndPutBitmap(bitmapIds.get(bitmapIdIndex++), options, new LinkedBitmap());
+        decodeAndPutBitmap(bitmapIds.get(bitmapIdIndex++), options, new LinkedBitmap());
     }
 
     /**
@@ -286,16 +286,27 @@ public class FrameSurfaceView extends BaseSurfaceView {
         return BitmapFactory.decodeStream(inputStream, null, options);
     }
 
-    private void putDecodedBitmapByReuse(int resId, BitmapFactory.Options options) {
+    /**
+     * reuse bitmap in drawnBitmaps to decode new bitmap
+     * @param resId
+     * @param options
+     */
+    private void decodedBitmapByReuse(int resId, BitmapFactory.Options options) {
         LinkedBitmap linkedBitmap = getDrawnBitmap();
         if (linkedBitmap == null) {
             linkedBitmap = new LinkedBitmap();
         }
         options.inBitmap = linkedBitmap.bitmap;
-        putDecodedBitmap(resId, options, linkedBitmap);
+        decodeAndPutBitmap(resId, options, linkedBitmap);
     }
 
-    private void putDecodedBitmap(int resId, BitmapFactory.Options options, LinkedBitmap linkedBitmap) {
+    /**
+     * decode bitmap and put it into decodedBitmaps
+     * @param resId
+     * @param options
+     * @param linkedBitmap
+     */
+    private void decodeAndPutBitmap(int resId, BitmapFactory.Options options, LinkedBitmap linkedBitmap) {
         Bitmap bitmap = decodeBitmap(resId, options);
         linkedBitmap.bitmap = bitmap;
         try {
@@ -358,7 +369,7 @@ public class FrameSurfaceView extends BaseSurfaceView {
 
         @Override
         public void run() {
-            putDecodedBitmapByReuse(bitmapIds.get(index), options);
+            decodedBitmapByReuse(bitmapIds.get(index), options);
             index++;
             if (index < bitmapIds.size()) {
                 handler.post(this);

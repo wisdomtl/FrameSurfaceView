@@ -30,6 +30,6 @@ dependencies {
     implementation project(':framesurfaceview')
 
 
-    implementation 'rapid.decoder:library:0.3.0'
-    implementation 'rapid.decoder:png-decoder:0.3.0'
+//    implementation 'rapid.decoder:library:0.3.0'
+//    implementation 'rapid.decoder:png-decoder:0.3.0'
 }

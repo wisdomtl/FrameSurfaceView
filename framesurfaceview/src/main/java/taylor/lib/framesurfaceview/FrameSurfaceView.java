@@ -39,7 +39,7 @@ public class FrameSurfaceView extends BaseSurfaceView {
     /**
      * the index of frame which is drawing
      */
-    private int frameIndex = INVALID_INDEX;
+    private volatile int frameIndex = INVALID_INDEX;
     /**
      * decoded bitmaps stores in this queue
      * consumer is drawing thread, producer is decoding thread.

@@ -13,7 +13,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 
-import rapid.decoder.BitmapDecoder;
+//import rapid.decoder.BitmapDecoder;
 import taylor.lib.framesurfaceview.NumberUtil;
 import taylor.lib.framesurfaceview.FrameSurfaceView;
 import taylor.lib.framesurfaceview.MethodUtil;
@@ -109,7 +109,7 @@ public class MainActivity extends AppCompatActivity  {
                     @Override
                     public void run() {
                         InputStream inputStream = getResources().openRawResource(R.raw.frame4);
-                        BitmapDecoder.from(inputStream).decode();
+//                        BitmapDecoder.from(inputStream).decode();
                     }
                 });
                 NumberUtil.average("rapid decode", span);

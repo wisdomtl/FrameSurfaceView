@@ -72,6 +72,7 @@ public abstract class BaseSurfaceView extends SurfaceView implements SurfaceHold
     }
 
     private void stopDrawThread() {
+        isAlive = false;
         handlerThread.quit();
         handler = null;
     }

@@ -15,6 +15,7 @@ import android.util.AttributeSet;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * a SurfaceView which draws bitmaps one after another like frame animation
@@ -39,7 +40,7 @@ public class FrameSurfaceView extends BaseSurfaceView {
     /**
      * the index of frame which is drawing
      */
-    private volatile int frameIndex = INVALID_INDEX;
+    private AtomicInteger frameIndex;
     /**
      * decoded bitmaps stores in this queue
      * consumer is drawing thread, producer is decoding thread.
@@ -91,6 +92,8 @@ public class FrameSurfaceView extends BaseSurfaceView {
         options = new BitmapFactory.Options();
         options.inMutable = true;
         decodeThread = new HandlerThread(DECODE_THREAD_NAME);
+        frameIndex = new AtomicInteger();
+        frameIndex.set(INVALID_INDEX);
     }
 
     @Override
@@ -207,7 +210,7 @@ public class FrameSurfaceView extends BaseSurfaceView {
             canvas.drawBitmap(linkedBitmap.bitmap, srcRect, dstRect, paint);
         }
         putDrawnBitmap(linkedBitmap);
-        frameIndex++;
+        frameIndex.incrementAndGet();
     }
 
     /**
@@ -221,7 +224,7 @@ public class FrameSurfaceView extends BaseSurfaceView {
      * reset the index of frame, preparing for the next frame animation
      */
     private void reset() {
-        frameIndex = INVALID_INDEX;
+        frameIndex.set(INVALID_INDEX);
     }
 
     /**
@@ -230,7 +233,7 @@ public class FrameSurfaceView extends BaseSurfaceView {
      * @return true: animation is finished, false: animation is doing
      */
     private boolean isFinish() {
-        return frameIndex >= bitmapIds.size() - 1;
+        return frameIndex.get() >= bitmapIds.size() - 1;
     }
 
     /**
@@ -239,14 +242,14 @@ public class FrameSurfaceView extends BaseSurfaceView {
      * @return true: animation is started, false: animation is not started
      */
     private boolean isStart() {
-        return frameIndex != INVALID_INDEX;
+        return frameIndex.get() != INVALID_INDEX;
     }
 
     /**
      * start frame animation from the first frame
      */
     public void start() {
-        frameIndex = 0;
+        frameIndex.compareAndSet(INVALID_INDEX, 0);
         if (decodeThread == null) {
             decodeThread = new HandlerThread(DECODE_THREAD_NAME);
         }
@@ -288,6 +291,7 @@ public class FrameSurfaceView extends BaseSurfaceView {
 
     /**
      * reuse bitmap in drawnBitmaps to decode new bitmap
+     *
      * @param resId
      * @param options
      */
@@ -302,6 +306,7 @@ public class FrameSurfaceView extends BaseSurfaceView {
 
     /**
      * decode bitmap and put it into decodedBitmaps
+     *
      * @param resId
      * @param options
      * @param linkedBitmap
